@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Library API
-  version: 1.1.0
-  description: STD22001
+  version: 1.1.1
+  description: STD22044
 servers:
   - url: https://library.com
 tags:
@@ -17,15 +17,17 @@ paths:
       description: The returned books are ordered by updated datetime.
       operationId: getBooks
       parameters:
+        - $ref: '#/components/parameters/queryPagination'
         - in: query
-          name: bookName
-          description: Filter return books by given name
+          name: pageSize
+          description: number per page
           required: false
           schema:
-            type: string
+            type: integer
+            default: 50
         - in: query
           name: releaseDateMin
-          description: |
+          description:
             If  `releaseDateMax` is not provided, `releaseDateMin` is ignored.
             `releaseDateMin` can not be after `releaseDateMax`.
           schema:
@@ -34,7 +36,7 @@ paths:
           required: false
         - in: query
           name: releaseDateMax
-          description: |
+          description:
             If  `releaseDateMin` is not provided, `releaseDateMax` is ignored.
             `releaseDateMax` can not be after `releaseDateMin`.
           schema:
@@ -64,13 +66,7 @@ paths:
                 $ref: '#/components/schemas/Book'
       responses:
         200:
-          description: The list of created or updated books
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Book'
+          $ref: '#/components/schemas/Response200'
   /authors:
     get:
       summary: Get all authors
@@ -78,23 +74,18 @@ paths:
       tags:
         - Authors
       parameters:
+        - $ref: '#/components/parameters/queryPagination'
         - name: authorName
           in: query
-          description: |
+          description:
             Filter returned authors by given name. 
             If not provided, then list is not filtered.
           schema:
             type: string
-          required: false
       responses:
         200:
-          description: The list of filtered authors
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Author'
+          $ref: '#/components/schemas/Response200'
+
     put:
       summary: Create or update authors
       operationId: crupdateAuthors
@@ -109,13 +100,8 @@ paths:
                 $ref: '#/components/schemas/Author'
       responses:
         200:
-          description: The list of created or updated authors
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Author'
+          $ref: '#/components/schemas/Response200'
+
   /authors/{aId}:
     delete:
       summary: Delete an author
@@ -136,7 +122,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Author'
+
 components:
+  parameters:
+    queryPagination:
+      name: page 
+      in: query
+      description: number of pagination 
+      required: false
+      schema: 
+        type: integer
+        default: 1
+    pathPagination:
+      name: page
+      in: path
+      description: page number of pagination
+      required: true
+      schema: 
+        type: integer
+        default: 1
   schemas:
     Book:
       type: object
@@ -165,10 +169,71 @@ components:
           type: string
         authorName:
           type: string
-        sex:
-          $ref: '#/components/schemas/Sex'
-    Sex:
-      type: string
-      enum:
-        - M
-        - F
+        
+        
+    Response200:
+      type: object
+      description: Succesfuly 
+      content:
+        application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+              body:
+                type: object
+    Response400:
+      description: bad request 
+      content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+              body:
+                type: object
+    Response403: 
+        description: Forbidden
+        properties:
+          content:
+            application/json:
+              schema:
+              type: object
+              properties:
+                status:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+              body:
+                type: object
+    Response500:
+        description: Internal Server Error
+        content: 
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+              body:
+                type: object
